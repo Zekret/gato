@@ -5,10 +5,21 @@ import { WinnerModal } from "./components/WinnerModal"
 
 import { TURNS } from "./constants"
 import { checkEndGame, checkWinnerFrom } from "./functions/board"
+import { resetGameStorage, saveGameToStorage } from "./functions/storage"
 
 function App() {
-  const [board, setBoard] = useState(Array(9).fill(null))
-  const [turn, setTurn] = useState(TURNS.X)
+  //LOS USE STATE NUNCA DENTRO DE UN IF, WHILE, ETC
+  const [board, setBoard] = useState(() => {
+    const boardFromStorage = window.localStorage.getItem('board')
+    if (boardFromStorage) return JSON.parse(boardFromStorage)
+    return Array(9).fill(null)
+  })
+
+  const [turn, setTurn] = useState(() => {
+    const turnFromStorage = window.localStorage.getItem('turn')
+    return turnFromStorage ?? TURNS.X
+  })
+
   //null sin  ganador, false empate
   const [winner, setWinner] = useState(null)
 
@@ -16,12 +27,14 @@ function App() {
     setBoard(Array(9).fill(null))
     setTurn(TURNS.X)
     setWinner(null)
+
+    resetGameStorage()
   }
 
   const updateBoard = (index) => {
     // no actualizamos esta posición
     // si ya tiene algo
-    if (board[index]) return
+    if (board[index] || winner) return
     // actualizar el tablero
     const newBoard = [...board]
     newBoard[index] = turn
@@ -29,6 +42,11 @@ function App() {
     //cambiar turno
     const newTurn = turn === TURNS.X ? TURNS.O : TURNS.X
     setTurn(newTurn)
+    //guardar partida
+    saveGameToStorage({
+      board: newBoard,
+      turn: newTurn
+    })
     //revisar ganador
     const newWinner = checkWinnerFrom(newBoard)
     if (newWinner) {
@@ -42,18 +60,18 @@ function App() {
   }
   return (
     <main className="board">
-      <h1>Gato</h1>
+      <h1>Gato / 3 en Raya</h1>
       <button onClick={resetGame}>Reset del juego</button>
       <section className="game">
         {
-          board.map((_, index) => {
+          board.map((square, index) => {
             return (
               <Square
                 key={index}
                 index={index}
                 updateBoard={updateBoard}
               >
-                {board[index]}
+                {square}
               </Square>
             )
           })
