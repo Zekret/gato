@@ -1,9 +1,10 @@
+import confetti from "canvas-confetti"
 import { useState } from "react"
 import { Square } from "./components/Square"
 import { WinnerModal } from "./components/WinnerModal"
 
 import { TURNS } from "./constants"
-import { checkWinnerFrom } from "./functions/board"
+import { checkEndGame, checkWinnerFrom } from "./functions/board"
 
 function App() {
   const [board, setBoard] = useState(Array(9).fill(null))
@@ -31,14 +32,18 @@ function App() {
     //revisar ganador
     const newWinner = checkWinnerFrom(newBoard)
     if (newWinner) {
+      confetti()
       setWinner(() => {
-        return newWinner 
+        return newWinner
       }) // SE UTILIZA UN CALLBACK PARA ARREGLAR EL problema al ver el estado dado que es sincrono dado que no se puede hacer un async await
+    } else if (checkEndGame(newBoard)) {
+      setWinner(false)
     }
   }
   return (
     <main className="board">
       <h1>Gato</h1>
+      <button onClick={resetGame}>Reset del juego</button>
       <section className="game">
         {
           board.map((_, index) => {
@@ -48,7 +53,7 @@ function App() {
                 index={index}
                 updateBoard={updateBoard}
               >
-                 {board[index]}
+                {board[index]}
               </Square>
             )
           })
